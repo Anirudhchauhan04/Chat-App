@@ -9,6 +9,7 @@ const useLogin = () => {
 	const login = async (username, password) => {
 		const success = handleInputErrors(username, password);
 		if (!success) return;
+
 		setLoading(true);
 		try {
 			const res = await fetch("/api/auth/login", {
@@ -17,13 +18,15 @@ const useLogin = () => {
 				body: JSON.stringify({ username, password }),
 			});
 
-			const data = await res.json();
-			if (data.error) {
-				throw new Error(data.error);
+			if (!res.ok) {
+				const errorData = await res.json();
+				throw new Error(errorData.error || "Login failed");
 			}
 
+			const data = await res.json();
 			localStorage.setItem("chat-user", JSON.stringify(data));
 			setAuthUser(data);
+			toast.success("Login successful");
 		} catch (error) {
 			toast.error(error.message);
 		} finally {
@@ -33,6 +36,7 @@ const useLogin = () => {
 
 	return { loading, login };
 };
+
 export default useLogin;
 
 function handleInputErrors(username, password) {
